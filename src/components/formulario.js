@@ -13,7 +13,6 @@ const Formulario = () => {
     });
 
     const [error, setError] = useState(false);
-    const [calculando, setCalculando] = useState(false);
     const [spinner, setSpinner] = useState(false);
 
     //Llenar set datos
@@ -23,11 +22,17 @@ const Formulario = () => {
             [e.target.name]: e.target.value === "" ? 0 : parseInt(e.target.value)
         });
     }
+    
 
     //Boton calcular
     const onSubmitCalcular = e => {
         e.preventDefault();
 
+        setDatos({
+            ...datos,
+            total : 0
+        });
+        
         const {cantidad, plazo} = datos;
         if( cantidad <= 0 || plazo <= 0){
             setError(true);
@@ -35,50 +40,42 @@ const Formulario = () => {
         }
 
         setError(false);
-
-        setCalculando(false);
         setSpinner(true);
+
         setTimeout(() => {
             intereses();
             setSpinner(false);
-            setCalculando(true);
         }, 3000);
     }
 
-    //Function calcular datos
     const intereses = () => {
         const {cantidad, plazo} = datos;
+        let interes;
+        let partesPagos = 2;
         switch (plazo) {
             case 1:                
-                datos.interes = 0.3;
-                datos.quincenas = plazo * 2;
-                datos.total = cantidad + (cantidad * 0.3);
-                datos.pagos = (cantidad + (cantidad * 0.3)) / (plazo * 2); 
+                interes = 0.15;
                 break;
             case 2:                
-                datos.interes = 0.4;
-                datos.quincenas = plazo * 2;
-                datos.total = cantidad + (cantidad * 0.4);
-                datos.pagos = (cantidad + (cantidad * 0.4)) / (plazo * 2); 
+                interes = 0.20;
                 break;
             case 3:                
-                datos.interes = 0.5;
-                datos.quincenas = plazo * 2;
-                datos.total = cantidad + (cantidad * 0.5);
-                datos.pagos = (cantidad + (cantidad * 0.5)) / (plazo * 2);  
+                interes = 0.25;
                 break;
             case 4: 
-                setDatos({
-                    ...datos,
-                    interes : 0.6,
-                    quincenas : plazo * 2,
-                    total : cantidad + (cantidad * 0.6),
-                    pagos : (cantidad + (cantidad * 0.6)) / (plazo * 2)  
-                });          
+                interes = 0.30;
                 break;
             default:
                 break;
         }    
+
+        setDatos({
+            ...datos,
+            interes,
+            quincenas : plazo * partesPagos,
+            total: cantidad + ( cantidad * interes),
+            pagos: ((cantidad + ( cantidad * interes)) / (plazo * partesPagos)).toFixed(2)
+        });
     }
 
     return ( 
@@ -104,15 +101,19 @@ const Formulario = () => {
                 </div>
             </Form>
             {spinner && <Spinner/>}
-            {calculando ? 
+
+            { datos.total > 0 ? 
                 <Resultado 
                     informacion = {datos}
                 />   
             :   
-                <div className="resultado">
-                    <p>Ingresa un monto de prestamo y el tiempo en que deseas pagarlo</p>
-                </div>
+                datos.total === 0 ? null :
+                    <div className="resultado">
+                        <p>Ingresa un monto de prestamo y el tiempo en que deseas pagarlo</p>
+                    </div>
+
             }
+
         </Contenedor>
      );
 }
